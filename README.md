@@ -1,105 +1,111 @@
 # React Chrome Extension Boilerplate
 
+[![Build Status](https://travis-ci.org/jhen0409/react-chrome-extension-boilerplate.svg?branch=master)](https://travis-ci.org/jhen0409/react-chrome-extension-boilerplate)
+[![Build status: Windows](https://ci.appveyor.com/api/projects/status/b5xy6ev6oykth0d2/branch/master?svg=true)](https://ci.appveyor.com/project/jhen0409/react-chrome-extension-boilerplate/branch/master)
 [![NPM version](http://img.shields.io/npm/v/react-chrome-extension-boilerplate.svg?style=flat)](https://www.npmjs.com/package/react-chrome-extension-boilerplate)
+[![Dependency Status](https://david-dm.org/jhen0409/react-chrome-extension-boilerplate.svg)](https://david-dm.org/jhen0409/react-chrome-extension-boilerplate)
+[![devDependency Status](https://david-dm.org/jhen0409/react-chrome-extension-boilerplate/dev-status.svg)](https://david-dm.org/jhen0409/react-chrome-extension-boilerplate#info=devDependencies)
 
-Boilerplate for Chrome extension React.js project.
+> Boilerplate for Chrome Extension React.js project.
 
-## Included
+## Features
 
- - [react](https://github.com/facebook/react)
- - [react-hot-loader](https://github.com/gaearon/react-hot-loader)
- - [redux (1.0.0rc)](https://github.com/gaearon/redux/tree/e39afbec270e9381df3d23dfa2f770c44f488380)
- - [react-redux](https://github.com/gaearon/react-redux)
- - [redux-devtools](https://github.com/gaearon/redux-devtools)
- - [webpack](https://github.com/webpack/webpack)
- - [babel](https://github.com/babel/babel)
- - [gulp-](https://github.com/gulpjs/gulp)
-   - [jade](https://github.com/phated/gulp-jade)
-   - [livereload](https://github.com/vohof/gulp-livereload)
-   - [babel](https://github.com/babel/gulp-babel)
-   - ...
- - [classnames](https://github.com/JedWatson/classnames)
- - [todomvc-app-css](https://github.com/tastejs/todomvc-app-css)
- - ...
+ - Simple [React](https://github.com/facebook/react)/[Redux](https://github.com/rackt/redux) examples of Chrome Extension Window & Popup & Inject pages
+ - Hot reloading React/Redux (Using [Webpack](https://github.com/webpack/webpack) and [React Transform](https://github.com/gaearon/react-transform))
+ - Write code with ES2015+ syntax (Using [Babel](https://github.com/babel/babel))
+ - E2E tests of Window & Popup & Inject pages (Using [Chrome Driver](https://www.npmjs.com/package/chromedriver), [Selenium Webdriver](https://www.npmjs.com/package/selenium-webdriver))
 
-## Example
+## Examples
 
-The example edited from [Redux](https://github.com/gaearon/redux) TodoMVC example.
+The example is edited from [Redux](https://github.com/rackt/redux) TodoMVC example.
 
 #### Popup
 
-![Popup](example-popup.gif)
+![Popup](https://cloud.githubusercontent.com/assets/3001525/14128490/dc05e9f8-f653-11e5-9de6-82d1de01844a.gif)
 
-The todos state will be saved to chrome.storage.local.
+The `todos` state will be saved to `chrome.storage.local`.
 
 #### Window
 
-![Popup](example-window.gif)
+![Window](https://cloud.githubusercontent.com/assets/3001525/14128489/da176b62-f653-11e5-9bff-fefc35232358.gif)
 
-The context menus created by content script(start script at visiting github.com).
+The context menu is created by [chrome/extension/background/contextMenus.js](chrome/extension/background/contextMenus.js).
 
-If you want Packaged app, You can edit manifest.{env}.json.
-```
-...
-  "app": {
-    "launch": {
-      "local_path": "app.html",
-      "container": "panel",
-      "width": 800,
-      "height": 500
-    }
-  },
-...
-```
+#### Inject page
 
-and remove browser_action.
+The inject script is being run by [chrome/extension/background/inject.js](chrome/extension/background/inject.js). A simple example will be inject bottom of page(`https://github.com/*`) if you visit.
+
+If you are receiving the error message `Failed to load resource: net::ERR_INSECURE_RESPONSE`, you need to allow invalid certificates for resources loaded from localhost. You can do this by visiting the following URL: `chrome://flags/#allow-insecure-localhost` and enabling **Allow invalid certificates for resources loaded from localhost**.
 
 ## Installation
 
-```
-# required node.js/io.js
-npm install
+```bash
+# clone it
+$ git clone https://github.com/jhen0409/react-chrome-extension-boilerplate.git
+
+# Install dependencies
+$ npm install
 ```
 
 ## Development
 
-```
+* Run script
+```bash
 # build files to './dev'
-# watch files change
-# start WebpackDevServer
-npm run dev
+# start webpack development server
+$ npm run dev
 ```
+* If you're developing Inject page, please allow `https://localhost:3000` connections. (Because `injectpage` injected GitHub (https) pages, so webpack server procotol must be https.)
+* [Load unpacked extensions](https://developer.chrome.com/extensions/getstarted#unpacked) with `./dev` folder.
 
-You can load unpacked extensions with './dev'.
+#### React/Redux hot reload
 
-#### React/Flux hot reload
+This boilerplate uses `Webpack` and `react-transform`, and use `Redux`. You can hot reload by editing related files of Popup & Window & Inject page.
 
-This boilerplate use Webpack and react-hot-loader, and use Redux, You can edit related to Popup & Window files to hot reload.
+#### Using Redux DevTools Extension
 
-#### LiveReload
-
-This boilerplate uses LiveReload except for Popup & Window, You can edit content & background scripts let chrome runtime reload.
+You can use [redux-devtools-extension](https://github.com/zalmoxisus/redux-devtools-extension) on development mode.
 
 ## Build
 
-```
+```bash
 # build files to './build'
-npm run build
+$ npm run build
 ```
 
-## Build & Compress ZIP file
+## Compress
 
+```bash
+# compress build folder to {manifest.name}.zip and crx
+$ npm run build
+$ npm run compress -- [options]
 ```
-# compress build folder to archive.zip
-npm run compress
-```
 
-## Test (Work in progress)
+#### Options
 
-The test use [sinon-chrome](https://github.com/vitalets/sinon-chrome).
+If you want to build `crx` file (auto update), please provide options, and add `update.xml` file url in [manifest.json](https://developer.chrome.com/extensions/autoupdate#update_url manifest.json).
 
-```
-npm test
+* --app-id: your extension id (can be get it when you first release extension)
+* --key: your private key path (default: './key.pem')  
+  you can use `npm run compress-keygen` to generate private key `./key.pem`
+* --codebase: your `crx` file url
+
+See [autoupdate guide](https://developer.chrome.com/extensions/autoupdate) for more information.
+
+## Test
+
+* `test/app`: React components, Redux actions & reducers tests
+* `test/e2e`: E2E tests (use [chromedriver](https://www.npmjs.com/package/chromedriver), [selenium-webdriver](https://www.npmjs.com/package/selenium-webdriver))
+
+```bash
+# lint
+$ npm run lint
+# test/app
+$ npm test
+$ npm test -- --watch  # watch files
+# test/e2e
+$ npm run build
+$ npm run test-e2e
 ```
 
 ## LICENSE

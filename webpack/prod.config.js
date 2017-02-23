@@ -1,27 +1,36 @@
-import path from 'path';
-import webpack from 'webpack';
+const path = require('path');
+const webpack = require('webpack');
+const postCSSConfig = require('./postcss.config');
 
-export default {
+const customPath = path.join(__dirname, './customPublicPath');
+
+module.exports = {
   entry: {
-    app: [ path.join(__dirname, '../app/scripts/app') ],
-    popup: [ path.join(__dirname, '../app/scripts/popup') ],
+    todoapp: [customPath, path.join(__dirname, '../chrome/extension/todoapp')],
+    background: [customPath, path.join(__dirname, '../chrome/extension/background')],
+    inject: [customPath, path.join(__dirname, '../chrome/extension/inject')]
   },
   output: {
     path: path.join(__dirname, '../build/js'),
     filename: '[name].bundle.js',
     chunkFilename: '[id].chunk.js'
   },
+  postcss() {
+    return postCSSConfig;
+  },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"'
-      }
-    }),
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.IgnorePlugin(/[^/]+\/[\S]+.dev$/),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
       comments: false,
       compressor: {
         warnings: false
+      }
+    }),
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify('production')
       }
     })
   ],
@@ -31,11 +40,18 @@ export default {
   module: {
     loaders: [{
       test: /\.js$/,
-      loaders: ['babel'],
-      exclude: /node_modules/
+      loader: 'babel',
+      exclude: /node_modules/,
+      query: {
+        presets: ['react-optimize']
+      }
     }, {
-      test: /\.css?$/,
-      loaders: ['style', 'raw']
+      test: /\.css$/,
+      loaders: [
+        'style',
+        'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
+        'postcss'
+      ]
     }]
   }
 };

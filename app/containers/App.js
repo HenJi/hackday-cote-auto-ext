@@ -1,46 +1,33 @@
-import React, { Component } from 'react';
-import TodoApp from './TodoApp';
-import { createStore, combineReducers, compose } from 'redux';
-import { devTools, persistState } from 'redux-devtools';
-import { DevTools, DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
-import { Provider } from 'react-redux';
-import * as reducers from '../reducers';
+import React, { Component, PropTypes } from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import Header from '../components/Header';
+import MainSection from '../components/MainSection';
+import * as TodoActions from '../actions/todos';
+import style from './App.css';
 
-const reducer = combineReducers(reducers);
-let finalCreateStore;
-
-let isDev = typeof(__DEVELOPMENT__) !== 'undefined';
-if (isDev) {
-  finalCreateStore = compose(
-    devTools(),
-    persistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/)),
-    createStore
-  );
-} else {
-  finalCreateStore = createStore;
-}
-
-const store = finalCreateStore(reducer);
-
+@connect(
+  state => ({
+    todos: state.todos
+  }),
+  dispatch => ({
+    actions: bindActionCreators(TodoActions, dispatch)
+  })
+)
 export default class App extends Component {
+
+  static propTypes = {
+    todos: PropTypes.array.isRequired,
+    actions: PropTypes.object.isRequired
+  };
+
   render() {
+    const { todos, actions } = this.props;
+
     return (
-      <div>
-        <Provider store={store}>
-          {() => <TodoApp /> }
-        </Provider>
-        {
-          (() => {
-            if (isDev) {
-              return (
-                <DebugPanel top right bottom>
-                  <DevTools store={store}
-                            monitor={LogMonitor} />
-                </DebugPanel>
-              );
-            }
-          })()
-        }
+      <div className={style.normal}>
+        <Header addTodo={actions.addTodo} />
+        <MainSection todos={todos} actions={actions} />
       </div>
     );
   }

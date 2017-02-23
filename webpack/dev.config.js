@@ -1,30 +1,47 @@
-import path from 'path';
-import webpack from 'webpack';
+const path = require('path');
+const webpack = require('webpack');
+const postCSSConfig = require('./postcss.config');
 
-let port = 3000;
-let entry = [
-  `webpack-dev-server/client?http://localhost:${port}`,
-  'webpack/hot/only-dev-server'
-];
+const host = 'localhost';
+const port = 3000;
+const customPath = path.join(__dirname, './customPublicPath');
+const hotScript = 'webpack-hot-middleware/client?path=__webpack_hmr&dynamicPublicPath=true';
 
-export default {
-  devtool: 'eval',
+const baseDevConfig = () => ({
+  devtool: 'eval-cheap-module-source-map',
   entry: {
-    app: [ path.join(__dirname, '../app/scripts/app'), ...entry ],
-    popup: [ path.join(__dirname, '../app/scripts/popup'), ...entry ],
+    todoapp: [customPath, hotScript, path.join(__dirname, '../chrome/extension/todoapp')],
+    background: [customPath, hotScript, path.join(__dirname, '../chrome/extension/background')],
+  },
+  devMiddleware: {
+    publicPath: `http://${host}:${port}/js`,
+    stats: {
+      colors: true
+    },
+    noInfo: true
+  },
+  hotMiddleware: {
+    path: '/js/__webpack_hmr'
   },
   output: {
     path: path.join(__dirname, '../dev/js'),
     filename: '[name].bundle.js',
-    chunkFilename: '[id].chunk.js',
-    publicPath: `http://localhost:${port}/js/`
+    chunkFilename: '[id].chunk.js'
+  },
+  postcss() {
+    return postCSSConfig;
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin(),
+    new webpack.IgnorePlugin(/[^/]+\/[\S]+.prod$/),
     new webpack.DefinePlugin({
-      __DEVELOPMENT__: true
-    }),
+      __HOST__: `'${host}'`,
+      __PORT__: port,
+      'process.env': {
+        NODE_ENV: JSON.stringify('development')
+      }
+    })
   ],
   resolve: {
     extensions: ['', '.js']
@@ -32,11 +49,37 @@ export default {
   module: {
     loaders: [{
       test: /\.js$/,
-      loaders: ['react-hot', 'babel'],
-      exclude: /node_modules/
+      loader: 'babel',
+      exclude: /node_modules/,
+      query: {
+        presets: ['react-hmre']
+      }
     }, {
-      test: /\.css?$/,
-      loaders: ['style', 'raw']
+      test: /\.css$/,
+      loaders: [
+        'style',
+        'css?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
+        'postcss'
+      ]
     }]
   }
+});
+
+const injectPageConfig = baseDevConfig();
+injectPageConfig.entry = [
+  customPath,
+  path.join(__dirname, '../chrome/extension/inject')
+];
+delete injectPageConfig.hotMiddleware;
+delete injectPageConfig.module.loaders[0].query;
+injectPageConfig.plugins.shift(); // remove HotModuleReplacementPlugin
+injectPageConfig.output = {
+  path: path.join(__dirname, '../dev/js'),
+  filename: 'inject.bundle.js',
 };
+const appConfig = baseDevConfig();
+
+module.exports = [
+  injectPageConfig,
+  appConfig
+];
